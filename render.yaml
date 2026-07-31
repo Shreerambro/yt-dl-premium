@@ -2,8 +2,13 @@ services:
   - type: worker
     name: yt-dl-bot
     runtime: python
-    buildCommand: pip install -r requirements.txt && apt-get update && apt-get install -y ffmpeg
-    startCommand: python bot.py
+    buildCommand: |
+      pip install -r requirements.txt
+      curl -fsSL https://deno.land/install.sh | sh
+    startCommand: |
+      export DENO_DIR="$HOME/.deno"
+      export PATH="$DENO_DIR/bin:$PATH"
+      python bot.py
     envVars:
       - key: API_ID
         sync: false

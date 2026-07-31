@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+# Heroku post-compile hook: install Deno for yt-dlp JS challenge solving
+echo "-----> Installing Deno runtime for yt-dlp EJS..."
+curl -fsSL https://deno.land/install.sh | sh
+export DENO_DIR="$HOME/.deno"
+export PATH="$DENO_DIR/bin:$PATH"
+
+# Create a profile.d script so Deno is in PATH at runtime
+mkdir -p "$1/.profile.d"
+echo 'export DENO_DIR="$HOME/.deno"' > "$1/.profile.d/deno.sh"
+echo 'export PATH="$DENO_DIR/bin:$PATH"' >> "$1/.profile.d/deno.sh"
+
+deno --version
+echo "-----> Deno installed successfully"
