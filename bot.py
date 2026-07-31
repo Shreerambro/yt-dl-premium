@@ -229,11 +229,20 @@ async def handle_url(_, msg: Message):
                 f"{cookie_hint}"
             )
         elif "members-only" in err.lower() or "join this channel" in err.lower():
-            await status.edit_text(
-                "🔒 **Members-only video detected!**\n\n"
-                "Use /cookies to upload your YouTube cookies first.\n"
-                "You must have an active membership on this channel."
-            )
+            if has_cookies(uid):
+                await status.edit_text(
+                    "🔒 **Members-only video!**\n\n"
+                    "Your cookies are loaded, but your YouTube account "
+                    "**does not have a membership** on this channel.\n\n"
+                    "You need to **join/subscribe as a paid member** on "
+                    "this channel first, then it will work."
+                )
+            else:
+                await status.edit_text(
+                    "🔒 **Members-only video detected!**\n\n"
+                    "Use /cookies to upload your YouTube cookies.\n"
+                    "Your account must have an **active membership** on this channel."
+                )
         elif "private video" in err.lower():
             await status.edit_text("🔒 **Private video.** Can't access it.")
         elif "unavailable" in err.lower():
