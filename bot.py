@@ -8,6 +8,11 @@ import asyncio
 import logging
 import os
 import time
+import platform
+import urllib.request
+import zipfile
+import tarfile
+import shutil
 from pathlib import Path
 
 from pyrogram import Client, filters, enums
@@ -247,6 +252,12 @@ async def handle_url(_, msg: Message):
             await status.edit_text("🔒 **Private video.** Can't access it.")
         elif "unavailable" in err.lower():
             await status.edit_text("❌ **Video unavailable.** It may be deleted or region-locked.")
+        elif "format is not available" in err.lower():
+            await status.edit_text(
+                "❌ **Requested format is not available.**\n\n"
+                "This usually happens because YouTube blocked the video extraction (JS challenge failed) "
+                "or the video is Premium/Members-only and your cookies are invalid/expired."
+            )
         else:
             log.exception("Failed to fetch info for %s", url)
             await status.edit_text(f"❌ **Failed to fetch video info.**\n\n`{err[:300]}`")
@@ -470,11 +481,65 @@ def _upload_progress(status_msg: Message, title: str):
 
 # ─── Main ───────────────────────────────────────────────────
 
+def ensure_deno():
+    """Auto-install Deno if it's missing, required for yt-dlp JS challenges."""
+    if shutil.which("deno"):
+        return
+
+    log.info("Deno not found in PATH. Installing Deno locally...")
+    system = platform.system().lower()
+    arch = platform.machine().lower()
+
+    if system == "windows":
+        url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-pc-windows-msvc.zip"
+        ext = ".zip"
+    elif system == "linux":
+        # Check if arm64 or x86_64
+        if "aarch64" in arch or "arm64" in arch:
+            url = "https://github.com/denoland/deno/releases/latest/download/deno-aarch64-unknown-linux-gnu.zip"
+        else:
+            url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip"
+        ext = ".zip"
+    elif system == "darwin":
+        if "arm64" in arch:
+            url = "https://github.com/denoland/deno/releases/latest/download/deno-aarch64-apple-darwin.zip"
+        else:
+            url = "https://github.com/denoland/deno/releases/latest/download/deno-x86_64-apple-darwin.zip"
+        ext = ".zip"
+    else:
+        log.warning(f"Unsupported OS for auto-Deno: {system}. JS challenges might fail.")
+        return
+
+    deno_dir = Path("./bin")
+    deno_dir.mkdir(exist_ok=True)
+    archive_path = deno_dir / f"deno{ext}"
+    
+    try:
+        urllib.request.urlretrieve(url, archive_path)
+        with zipfile.ZipFile(archive_path, 'r') as zip_ref:
+            zip_ref.extractall(deno_dir)
+        
+        archive_path.unlink()
+        
+        # Add to PATH
+        os.environ["PATH"] = f"{deno_dir.absolute()}{os.pathsep}{os.environ.get('PATH', '')}"
+        
+        # Make executable on Linux/Mac
+        if system != "windows":
+            deno_exe = deno_dir / "deno"
+            deno_exe.chmod(0o755)
+            
+        log.info("Deno installed and added to PATH successfully.")
+    except Exception as e:
+        log.error(f"Failed to install Deno: {e}")
+
 if __name__ == "__main__":
     # Ensure required dirs
     Path("./sessions").mkdir(exist_ok=True)
     DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
     COOKIES_DIR.mkdir(parents=True, exist_ok=True)
+    
+    ensure_deno()
 
     log.info("Bot starting…")
     app.run()
