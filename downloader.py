@@ -55,12 +55,6 @@ def _base_opts(user_id: int) -> dict:
         "socket_timeout": 30,
         "retries": 5,
         "extractor_retries": 5,
-        # Anti-bot: try multiple player clients to avoid "sign in" blocks
-        "extractor_args": {
-            "youtube": {
-                "player_client": ["web", "ios", "mweb"],
-            }
-        },
         # Realistic browser fingerprint
         "http_headers": {
             "User-Agent": (
@@ -73,7 +67,17 @@ def _base_opts(user_id: int) -> dict:
     }
     cookies = _cookies_path(user_id)
     if cookies:
+        # Cookies present → let yt-dlp use default player (web),
+        # no need for player_client hacks that break format selection
         opts["cookiefile"] = cookies
+    else:
+        # No cookies → try mweb as last resort to bypass bot check
+        # (avoid "ios" — it returns limited formats that break selection)
+        opts["extractor_args"] = {
+            "youtube": {
+                "player_client": ["web", "mweb"],
+            }
+        }
     return opts
 
 
