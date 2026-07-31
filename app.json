@@ -3,7 +3,6 @@
   "description": "Telegram bot to download YouTube videos including members-only content with quality selection.",
   "keywords": ["youtube", "downloader", "telegram", "bot", "members-only"],
   "repository": "https://github.com/Shreerambro/yt-dl-premium",
-  "stack": "container",
   "buildpacks": [
     { "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git" },
     { "url": "heroku/python" }
