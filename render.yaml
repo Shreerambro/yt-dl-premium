@@ -1,0 +1,16 @@
+services:
+  - type: worker
+    name: yt-dl-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt && apt-get update && apt-get install -y ffmpeg
+    startCommand: python bot.py
+    envVars:
+      - key: API_ID
+        sync: false
+      - key: API_HASH
+        sync: false
+      - key: BOT_TOKEN
+        sync: false
+      - key: AUTH_USERS
+        sync: false
+        value: ""

@@ -1,0 +1,36 @@
+{
+  "name": "YT Members Downloader Bot",
+  "description": "Telegram bot to download YouTube videos including members-only content with quality selection.",
+  "keywords": ["youtube", "downloader", "telegram", "bot", "members-only"],
+  "repository": "https://github.com/Shreerambro/yt-dl-premium",
+  "stack": "container",
+  "buildpacks": [
+    { "url": "https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest.git" },
+    { "url": "heroku/python" }
+  ],
+  "env": {
+    "API_ID": {
+      "description": "Telegram API ID from my.telegram.org",
+      "required": true
+    },
+    "API_HASH": {
+      "description": "Telegram API Hash from my.telegram.org",
+      "required": true
+    },
+    "BOT_TOKEN": {
+      "description": "Bot token from @BotFather",
+      "required": true
+    },
+    "AUTH_USERS": {
+      "description": "Comma-separated Telegram user IDs allowed to use the bot. Leave empty for public access.",
+      "required": false,
+      "value": ""
+    }
+  },
+  "formation": {
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  }
+}
