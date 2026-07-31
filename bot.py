@@ -25,7 +25,7 @@ from config import (
     PROGRESS_UPDATE_INTERVAL, COOKIES_DIR, DOWNLOAD_DIR,
 )
 from downloader import (
-    fetch_info, download_video, DownloadProgress, _sizeof_fmt,
+    fetch_info, download_video, DownloadProgress, _sizeof_fmt, has_cookies,
 )
 
 # ─── Logging ────────────────────────────────────────────────
@@ -211,7 +211,24 @@ async def handle_url(_, msg: Message):
         info = await fetch_info(url, uid)
     except Exception as e:
         err = str(e)
-        if "members-only" in err.lower() or "join this channel" in err.lower():
+        if "sign in" in err.lower() or "confirm you're not a bot" in err.lower() or "bot" in err.lower() and "sign" in err.lower():
+            cookie_hint = (
+                "\n\n✅ You have cookies saved. They might be expired — try re-uploading fresh ones via /cookies"
+                if has_cookies(uid) else
+                "\n\n👉 Use /cookies to upload your YouTube cookies."
+            )
+            await status.edit_text(
+                "🤖 **YouTube is asking to verify you're not a bot.**\n\n"
+                "This happens on cloud servers. You need to upload browser cookies "
+                "so YouTube recognizes you as a real user.\n\n"
+                "**How to fix:**\n"
+                "1. Install **Get cookies.txt LOCALLY** extension in Chrome\n"
+                "2. Go to youtube.com (make sure you're logged in)\n"
+                "3. Click extension → Export\n"
+                "4. Send /cookies here and upload the file"
+                f"{cookie_hint}"
+            )
+        elif "members-only" in err.lower() or "join this channel" in err.lower():
             await status.edit_text(
                 "🔒 **Members-only video detected!**\n\n"
                 "Use /cookies to upload your YouTube cookies first.\n"

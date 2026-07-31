@@ -53,13 +53,33 @@ def _base_opts(user_id: int) -> dict:
         "geo_bypass": True,
         "nocheckcertificate": True,
         "socket_timeout": 30,
-        "retries": 3,
-        "extractor_retries": 3,
+        "retries": 5,
+        "extractor_retries": 5,
+        # Anti-bot: try multiple player clients to avoid "sign in" blocks
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["web", "ios", "mweb"],
+            }
+        },
+        # Realistic browser fingerprint
+        "http_headers": {
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/131.0.0.0 Safari/537.36"
+            ),
+            "Accept-Language": "en-US,en;q=0.9",
+        },
     }
     cookies = _cookies_path(user_id)
     if cookies:
         opts["cookiefile"] = cookies
     return opts
+
+
+def has_cookies(user_id: int) -> bool:
+    """Check if user has uploaded cookies."""
+    return _cookies_path(user_id) is not None
 
 
 # ─── Data Classes ───────────────────────────────────────────
