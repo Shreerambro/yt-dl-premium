@@ -249,7 +249,8 @@ async def download_video(
     """
     opts = _base_opts(user_id)
     opts["progress_hooks"] = [progress._hook]
-    opts["outtmpl"] = str(DOWNLOAD_DIR / "%(title).150s [%(id)s].%(ext)s")
+    opts["restrictfilenames"] = True
+    opts["outtmpl"] = str(DOWNLOAD_DIR / "%(title).50s [%(id)s].%(ext)s")
 
     if quality == "audio":
         opts["format"] = "bestaudio/best"
