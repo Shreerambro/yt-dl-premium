@@ -418,14 +418,25 @@ async def handle_quality_select(_, cb: CallbackQuery):
             "This may take a moment for large files."
         )
 
+        # Upload thumbnail
+        thumb_path = None
+        if info.thumbnail:
+            try:
+                thumb_file = DOWNLOAD_DIR / f"{uid}_thumb.jpg"
+                # Using urllib.request to download thumbnail synchronously in thread is okay for quick image
+                urllib.request.urlretrieve(info.thumbnail, str(thumb_file))
+                thumb_path = str(thumb_file)
+            except Exception as e:
+                log.warning(f"Failed to download thumbnail: {e}")
+
         # Upload
-        thumb = None
         if quality == "audio":
             await cb.message.reply_audio(
                 audio=filepath,
                 caption=f"🎵 {info.title}",
                 title=info.title,
                 performer=info.uploader,
+                thumb=thumb_path,
                 progress=_upload_progress(status_msg, info.title),
             )
         else:
@@ -434,6 +445,7 @@ async def handle_quality_select(_, cb: CallbackQuery):
                 caption=f"🎬 {info.title} [{quality}]",
                 duration=info.duration,
                 supports_streaming=True,
+                thumb=thumb_path,
                 progress=_upload_progress(status_msg, info.title),
             )
 
@@ -448,12 +460,19 @@ async def handle_quality_select(_, cb: CallbackQuery):
     finally:
         active_downloads.pop(uid, None)
         progress_task.cancel()
-        # Cleanup downloaded file
+        # Cleanup downloaded file and thumbnail
         if filepath and Path(filepath).exists():
             try:
                 Path(filepath).unlink()
             except Exception:
                 pass
+        
+        try:
+            thumb_file = DOWNLOAD_DIR / f"{uid}_thumb.jpg"
+            if thumb_file.exists():
+                thumb_file.unlink()
+        except Exception:
+            pass
 
 
 def _upload_progress(status_msg: Message, title: str):
